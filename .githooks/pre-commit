@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+
+set -eu
+
+echo "pre-commit: checking staged files..."
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    echo "pre-commit: this hook must be run inside a Git repository." >&2
+    exit 1
+fi
+
+if git diff --cached --quiet --exit-code; then
+    echo "pre-commit: commit stopped because there are no staged changes." >&2
+    exit 1
+fi
+
+blocked_files="$(
+    git diff --cached --name-only --diff-filter=ACMR |
+    grep -Ei '\.(log|tmp)$' || true
+)"
+
+if [ -n "$blocked_files" ]; then
+    echo "pre-commit: commit stopped." >&2
+    echo "pre-commit: files with .log and .tmp extensions must not be committed:" >&2
+    printf '%s\n' "$blocked_files" | sed 's/^/  - /' >&2
+    echo "pre-commit: remove these files from the index or add the right data to another file." >&2
+    exit 1
+fi
+
+echo "pre-commit: staged files passed."
+echo "pre-commit: empty commit messages and message format are checked by commit-msg."
+exit 0

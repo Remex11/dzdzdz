@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+
+set -eu
+
+message_file="${1:-}"
+
+if [ -z "$message_file" ] || [ ! -f "$message_file" ]; then
+    echo "commit-msg: commit message file was not passed to the hook." >&2
+    exit 1
+fi
+
+message="$(
+    sed '/^[[:space:]]*#/d' "$message_file" |
+    tr -d '\r' |
+    sed '/^[[:space:]]*$/d'
+)"
+
+if [ -z "$message" ]; then
+    echo "commit-msg: commit stopped because the message is empty." >&2
+    echo "commit-msg: use format [TYPE] message, for example [FIX] null pointer crash." >&2
+    exit 1
+fi
+
+first_line="$(printf '%s\n' "$message" | sed -n '1p')"
+
+if ! printf '%s' "$first_line" | grep -Eq '^\[[A-Z][A-Z0-9_-]*\] .+'; then
+    echo "commit-msg: commit stopped because the message has the wrong format." >&2
+    echo "commit-msg: expected format: [TYPE] message" >&2
+    echo "commit-msg: examples: [FIX] null pointer crash, [FEAT] add new user API" >&2
+    echo "commit-msg: received: $first_line" >&2
+    exit 1
+fi
+
+echo "commit-msg: message format passed."
+exit 0

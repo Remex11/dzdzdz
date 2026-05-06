@@ -1,0 +1,10 @@
+__pycache__/
+.dotnet-home/
+.nuget/
+*.log
+*.tmp
+bin/
+obj/
+build/
+.dotnet-home/
+.nuget/

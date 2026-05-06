@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+
+set -eu
+
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+cd "$repo_root"
+
+run_script() {
+    script_path="$1"
+    script_name="$2"
+
+    if [ ! -f "$script_path" ]; then
+        echo "pre-push: $script_name script was not found: $script_path" >&2
+        exit 1
+    fi
+
+    echo "pre-push: running $script_name..."
+    if [ -x "$script_path" ]; then
+        "$script_path"
+    else
+        sh "$script_path"
+    fi
+}
+
+run_script "./scripts/build.sh" "project build"
+run_script "./scripts/test.sh" "fast unit tests"
+
+echo "pre-push: build and tests passed. Push is allowed."
+exit 0
